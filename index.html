@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClipForge — Long videos into short clips, locally</title>
+<meta name="description" content="ClipForge is a local-first Windows tool that turns long videos into short vertical clips with AI-selected moments, face-aware reframing and animated captions. Your media stays on your machine.">
+<meta property="og:title" content="ClipForge — Long videos into short clips, locally">
+<meta property="og:description" content="Local-first AI video clipper for Windows. Transcription, clip selection, reframing and captions without uploading your media.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0D0C0B">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230D0C0B'/%3E%3Cpath d='M9 7h14v4H14v4h8v4h-8v6H9z' fill='%23FF4D1A'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: dark;
+  --cf-bg:#0d0c0b; --cf-surface:#141211; --cf-surface-sunken:#100e0d; --cf-surface-raised:#1c1917;
+  --cf-line:#2a2623; --cf-line-strong:#3b3632;
+  --cf-text:#f4efe9; --cf-text-secondary:#b9b1a8; --cf-text-muted:#948b81;
+  --cf-accent:#ff4d1a; --cf-accent-hover:#ff6a3d; --cf-on-accent:#050505; --cf-accent-text:#ff7448;
+  --cf-accent-tint:color-mix(in srgb,var(--cf-accent) 12%,var(--cf-bg));
+  --cf-track-video:#b9a8ff; --cf-track-video-fill:rgba(185,168,255,.17);
+  --cf-track-caption-line:#ff8ad8; --cf-track-caption-fill:rgba(255,138,216,.08);
+  --cf-track-hook:#efd141;
+  --cf-track-audio:#5fd9c4; --cf-track-audio-fill:rgba(95,217,196,.15);
+  --cf-success:#3ddc84;
+  --cf-font-display:"Bricolage Grotesque","Inter Tight",system-ui,sans-serif;
+  --cf-font-sans:"Inter Tight",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --cf-font-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --cf-edge-light:inset 0 1px 0 rgba(255,255,255,.07),0 1px 0 rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0;border-radius:0}
+html{scroll-behavior:smooth}
+body{background:var(--cf-bg);color:var(--cf-text);font:400 16px/1.55 var(--cf-font-sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+.label{font:500 11px/1.2 var(--cf-font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--cf-accent-text)}
+h1,h2,h3{font-family:var(--cf-font-display);font-weight:800;letter-spacing:-.03em;line-height:1.02}
+h1{font-size:clamp(36px,6vw,64px)}
+h2{font-size:clamp(26px,3.4vw,38px);margin:8px 0 12px}
+h3{font-size:18px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-bottom:6px}
+p.lead{font-size:clamp(16px,1.6vw,19px);color:var(--cf-text-secondary);max-width:56ch}
+
+/* barra */
+header{border-bottom:1px solid var(--cf-line);background:var(--cf-surface)}
+.bar{display:flex;align-items:center;justify-content:space-between;height:52px;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font:800 18px/1 var(--cf-font-display);letter-spacing:-.03em;text-decoration:none}
+.brand i{width:22px;height:22px;background:var(--cf-accent);display:inline-block;position:relative}
+.brand i::after{content:"";position:absolute;left:6px;top:4px;width:10px;height:14px;border:3px solid var(--cf-on-accent);border-right:0;border-bottom:0}
+nav{display:flex;align-items:center;gap:20px;font-size:14px;font-weight:500;color:var(--cf-text-secondary)}
+nav a{text-decoration:none}nav a:hover{color:var(--cf-text)}
+.lang{font:500 11px/1 var(--cf-font-mono);letter-spacing:.08em;background:var(--cf-surface-raised);border:1px solid var(--cf-line-strong);color:var(--cf-text);padding:7px 9px;cursor:pointer}
+.lang:hover{border-color:var(--cf-accent)}
+@media(max-width:640px){nav a.hide-m{display:none}}
+
+/* hero */
+.hero{padding:56px 0 48px;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
+.hero h1 em{font-style:normal;color:var(--cf-accent)}
+.hero .badge{display:inline-flex;align-items:center;gap:8px;margin-bottom:20px;border:1px solid var(--cf-line-strong);padding:6px 10px;background:var(--cf-surface)}
+.dot{width:7px;height:7px;background:var(--cf-accent);box-shadow:0 0 10px var(--cf-accent)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.btn{display:inline-flex;align-items:center;height:40px;padding:0 18px;font:600 14px/1 var(--cf-font-sans);text-decoration:none;border:1px solid var(--cf-line-strong);background:var(--cf-surface-raised);box-shadow:var(--cf-edge-light)}
+.btn:hover{border-color:var(--cf-accent)}
+.btn.primary{background:var(--cf-accent);color:var(--cf-on-accent);border-color:var(--cf-accent)}
+.btn.primary:hover{background:var(--cf-accent-hover)}
+@media(max-width:860px){.hero{grid-template-columns:1fr;padding-top:36px}}
+
+/* mockup */
+.mock{background:var(--cf-surface);border:1px solid var(--cf-line);box-shadow:var(--cf-edge-light);padding:14px}
+.mock-top{display:flex;gap:6px;margin-bottom:12px}
+.mock-top span{width:8px;height:8px;background:var(--cf-line-strong)}
+.stage{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:stretch}
+.phone{width:132px;aspect-ratio:9/16;background:linear-gradient(160deg,#2a2623,#141211 70%);border:1px solid var(--cf-line-strong);position:relative;overflow:hidden}
+.phone::before{content:"";position:absolute;left:50%;top:26%;width:54px;height:54px;transform:translateX(-50%);background:var(--cf-surface-raised);border:1px solid var(--cf-line-strong);border-radius:50%!important}
+.phone::after{content:"";position:absolute;left:50%;top:48%;width:92px;height:70px;transform:translateX(-50%);background:var(--cf-surface-raised);border:1px solid var(--cf-line-strong);border-radius:46px 46px 0 0!important}
+.hook{position:absolute;left:8px;right:8px;top:9px;background:var(--cf-track-hook);color:#050505;font:800 11px/1.15 var(--cf-font-display);padding:5px 6px;z-index:2}
+.cap{position:absolute;left:6px;right:6px;bottom:16px;text-align:center;font:800 14px/1.1 var(--cf-font-display);z-index:2;text-transform:uppercase}
+.cap b{color:var(--cf-accent);font-weight:800}
+.side{display:flex;flex-direction:column;gap:10px;min-width:0}
+.panel{background:var(--cf-surface-sunken);border:1px solid var(--cf-line);padding:10px}
+.panel .label{display:block;margin-bottom:8px;color:var(--cf-text-muted)}
+.score{display:flex;align-items:center;gap:8px;font:500 12px var(--cf-font-mono);color:var(--cf-text-secondary);margin-top:6px}
+.score .bar2{flex:1;height:6px;background:var(--cf-line)}
+.score .bar2 i{display:block;height:100%;background:var(--cf-accent)}
+.tracks{margin-top:14px;display:grid;gap:5px}
+.tr{display:grid;grid-template-columns:54px 1fr;gap:8px;align-items:center;font:500 10px var(--cf-font-mono);letter-spacing:.06em;color:var(--cf-text-muted)}
+.tr div{position:relative;height:18px;background:var(--cf-surface-sunken);border:1px solid var(--cf-line)}
+.tr div i{position:absolute;top:1px;bottom:1px}
+.tr.v i{background:var(--cf-track-video-fill);border:1px solid var(--cf-track-video)}
+.tr.c i{background:var(--cf-track-caption-fill);border:1px solid var(--cf-track-caption-line)}
+.tr.a i{background:var(--cf-track-audio-fill);border:1px solid var(--cf-track-audio)}
+.play{position:absolute;top:-4px;bottom:-4px;left:38%;width:2px;background:var(--cf-accent);box-shadow:0 0 10px var(--cf-accent)}
+
+/* seções */
+section{padding:56px 0;border-top:1px solid var(--cf-line)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--cf-line);border:1px solid var(--cf-line);margin-top:28px}
+.cell{background:var(--cf-surface);padding:22px}
+.cell p{color:var(--cf-text-secondary);font-size:15px}
+.num{font:500 12px var(--cf-font-mono);color:var(--cf-accent-text);display:block;margin-bottom:12px;letter-spacing:.08em}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+@media(max-width:860px){.two{grid-template-columns:1fr;gap:24px}}
+ul.chk{list-style:none;display:grid;gap:12px;margin-top:8px}
+ul.chk li{padding-left:26px;position:relative;color:var(--cf-text-secondary)}
+ul.chk li::before{content:"";position:absolute;left:0;top:7px;width:10px;height:10px;background:var(--cf-accent)}
+ul.chk b{color:var(--cf-text);font-weight:600}
+.facts{display:grid;grid-template-columns:140px 1fr;gap:0;border:1px solid var(--cf-line);background:var(--cf-surface)}
+.facts dt,.facts dd{padding:12px 14px;border-bottom:1px solid var(--cf-line);font-size:14px}
+.facts dt{font:500 11px var(--cf-font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--cf-text-muted);display:flex;align-items:center}
+.facts dd{color:var(--cf-text-secondary)}
+.facts dt:last-of-type,.facts dd:last-of-type{border-bottom:0}
+@media(max-width:520px){.facts{grid-template-columns:1fr}.facts dt{padding-bottom:0;border-bottom:0}}
+footer{border-top:1px solid var(--cf-line);padding:28px 0;color:var(--cf-text-muted);font-size:13px}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+html:not([lang="pt-BR"]) [data-pt]{display:none!important}
+html[lang="pt-BR"] [data-en]{display:none!important}
+:focus-visible{outline:2px solid var(--cf-accent);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#top"><i aria-hidden="true"></i>ClipForge</a>
+    <nav>
+      <a class="hide-m" href="#how"><span data-en>How it works</span><span data-pt>Como funciona</span></a>
+      <a class="hide-m" href="#privacy"><span data-en>Privacy</span><span data-pt>Privacidade</span></a>
+      <a href="#contact"><span data-en>Contact</span><span data-pt>Contato</span></a>
+      <button class="lang" id="lang" type="button" aria-label="Switch language">PT</button>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+<div class="wrap hero">
+  <div>
+    <div class="badge label"><span class="dot"></span><span data-en>Private beta · Windows · NVIDIA GPU</span><span data-pt>Beta privado · Windows · GPU NVIDIA</span></div>
+    <h1>
+      <span data-en>Long videos in.<br><em>Short clips</em> out.</span>
+      <span data-pt>Vídeo longo entra.<br><em>Cortes curtos</em> saem.</span>
+    </h1>
+    <p class="lead" style="margin-top:20px">
+      <span data-en>ClipForge is a local-first tool that finds the best moments of podcasts, livestreams and interviews, reframes them to vertical around the speaker and adds animated captions. Your media never leaves your computer.</span>
+      <span data-pt>O ClipForge é uma ferramenta local que encontra os melhores momentos de podcasts, lives e entrevistas, reenquadra para vertical acompanhando quem fala e adiciona legendas animadas. Sua mídia nunca sai do seu computador.</span>
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="#contact"><span data-en>Request beta access</span><span data-pt>Pedir acesso ao beta</span></a>
+      <a class="btn" href="#how"><span data-en>See how it works</span><span data-pt>Ver como funciona</span></a>
+    </div>
+  </div>
+
+  <div class="mock" aria-hidden="true">
+    <div class="mock-top"><span></span><span></span><span></span></div>
+    <div class="stage">
+      <div class="phone">
+        <div class="hook">THE PART NOBODY EXPECTED</div>
+        <div class="cap">this is <b>the moment</b></div>
+      </div>
+      <div class="side">
+        <div class="panel">
+          <span class="label">Clip 3 · 00:41</span>
+          <div class="score"><span>score</span><div class="bar2"><i style="width:86%"></i></div><span>8.6</span></div>
+          <div class="score"><span>hook</span><div class="bar2"><i style="width:74%"></i></div><span>7.4</span></div>
+        </div>
+        <div class="panel">
+          <span class="label">Reframe</span>
+          <div style="font-size:13px;color:var(--cf-text-secondary)">Follows the active speaker. Split layout when two people talk.</div>
+        </div>
+      </div>
+    </div>
+    <div class="tracks">
+      <div class="tr v">VIDEO<div><i style="left:2%;width:30%"></i><i style="left:36%;width:26%"></i><i style="left:66%;width:30%"></i><span class="play"></span></div></div>
+      <div class="tr c">CAPTION<div><i style="left:2%;width:94%"></i></div></div>
+      <div class="tr a">AUDIO<div><i style="left:2%;width:94%"></i></div></div>
+    </div>
+  </div>
+</div>
+
+<section id="how">
+  <div class="wrap">
+    <span class="label"><span data-en>Pipeline</span><span data-pt>Fluxo</span></span>
+    <h2><span data-en>From a two-hour recording to a ready-to-post clip</span><span data-pt>De uma gravação de duas horas a um corte pronto para postar</span></h2>
+    <div class="grid">
+      <div class="cell"><span class="num">01</span>
+        <h3 data-en>Transcribe</h3><h3 data-pt>Transcrever</h3>
+        <p data-en>Speech-to-text with faster-whisper running on your GPU, with word-level timing.</p>
+        <p data-pt>Transcrição de fala com faster-whisper na sua GPU, com tempo palavra por palavra.</p></div>
+      <div class="cell"><span class="num">02</span>
+        <h3 data-en>Pick the moments</h3><h3 data-pt>Escolher os trechos</h3>
+        <p data-en>An LLM scores candidate segments for hook, self-contained story and ending, so clips start and stop at natural boundaries.</p>
+        <p data-pt>Uma IA pontua trechos candidatos por gancho, história completa e final, para o corte começar e terminar em pontos naturais.</p></div>
+      <div class="cell"><span class="num">03</span>
+        <h3 data-en>Reframe to vertical</h3><h3 data-pt>Reenquadrar para vertical</h3>
+        <p data-en>Face detection and active-speaker tracking keep the right person in frame, with split layouts for conversations.</p>
+        <p data-pt>Detecção de rostos e de quem está falando mantêm a pessoa certa no quadro, com layouts divididos para conversas.</p></div>
+      <div class="cell"><span class="num">04</span>
+        <h3 data-en>Captions and hooks</h3><h3 data-pt>Legendas e ganchos</h3>
+        <p data-en>Animated captions and on-screen hook templates, rendered with libass so the preview matches the exported MP4.</p>
+        <p data-pt>Legendas animadas e modelos de gancho na tela, renderizados com libass para o preview ser idêntico ao MP4 exportado.</p></div>
+      <div class="cell"><span class="num">05</span>
+        <h3 data-en>Edit on a timeline</h3><h3 data-pt>Editar na timeline</h3>
+        <p data-en>Review every clip in a full editor: adjust cuts, captions, layouts and framing before you export.</p>
+        <p data-pt>Revise cada corte em um editor completo: ajuste cortes, legendas, layouts e enquadramento antes de exportar.</p></div>
+      <div class="cell"><span class="num">06</span>
+        <h3 data-en>Export with FFmpeg</h3><h3 data-pt>Exportar com FFmpeg</h3>
+        <p data-en>Final vertical MP4s rendered on your machine, ready for Shorts, Reels and TikTok.</p>
+        <p data-pt>MP4s verticais finais renderizados na sua máquina, prontos para Shorts, Reels e TikTok.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="privacy">
+  <div class="wrap two">
+    <div>
+      <span class="label"><span data-en>Privacy by design</span><span data-pt>Privacidade desde o projeto</span></span>
+      <h2><span data-en>Your footage stays yours</span><span data-pt>Suas imagens continuam suas</span></h2>
+      <p class="lead">
+        <span data-en>Creators work with unreleased interviews, guests and private conversations. ClipForge was built so that none of that has to be uploaded to a third party.</span>
+        <span data-pt>Criadores trabalham com entrevistas inéditas, convidados e conversas privadas. O ClipForge foi feito para que nada disso precise ser enviado a terceiros.</span>
+      </p>
+    </div>
+    <ul class="chk">
+      <li data-en><b>Video, audio and faces are processed locally.</b> They are never sent to external APIs.</li>
+      <li data-pt><b>Vídeo, áudio e rostos são processados localmente.</b> Nunca são enviados a APIs externas.</li>
+      <li data-en><b>Local LLMs supported</b> through Ollama and OpenAI-compatible local servers.</li>
+      <li data-pt><b>LLMs locais suportadas</b> via Ollama e servidores locais compatíveis com OpenAI.</li>
+      <li data-en><b>Cloud models are optional</b> and receive text only (transcript excerpts), never media.</li>
+      <li data-pt><b>Modelos em nuvem são opcionais</b> e recebem apenas texto (trechos da transcrição), nunca mídia.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="status">
+  <div class="wrap two">
+    <div>
+      <span class="label"><span data-en>Status</span><span data-pt>Estado atual</span></span>
+      <h2><span data-en>Early, honest and in active development</span><span data-pt>Em estágio inicial e em desenvolvimento ativo</span></h2>
+      <p class="lead">
+        <span data-en>ClipForge is built by a single independent developer and is currently in a closed beta with a small group of testers.</span>
+        <span data-pt>O ClipForge é feito por um único desenvolvedor independente e está em beta fechado com um pequeno grupo de testadores.</span>
+      </p>
+    </div>
+    <dl class="facts">
+      <dt data-en>Stage</dt><dt data-pt>Estágio</dt><dd data-en>Pre-launch, private beta</dd><dd data-pt>Pré-lançamento, beta privado</dd>
+      <dt data-en>Platform</dt><dt data-pt>Plataforma</dt><dd>Windows 10/11 · NVIDIA GPU (CUDA)</dd>
+      <dt data-en>Stack</dt><dt data-pt>Tecnologia</dt><dd>Python · React/Vite · FFmpeg · faster-whisper · Ollama</dd>
+      <dt data-en>Team</dt><dt data-pt>Equipe</dt><dd data-en>1 developer (solo founder)</dd><dd data-pt>1 desenvolvedor (fundador solo)</dd>
+      <dt data-en>Based in</dt><dt data-pt>Local</dt><dd data-en>Brazil</dd><dd data-pt>Brasil</dd>
+    </dl>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <span class="label"><span data-en>Contact</span><span data-pt>Contato</span></span>
+    <h2><span data-en>Want to try it or talk about it?</span><span data-pt>Quer testar ou conversar sobre o projeto?</span></h2>
+    <p class="lead">
+      <span data-en>Beta access is handed out by hand for now. Send a short note about the videos you would clip.</span>
+      <span data-pt>O acesso ao beta é liberado manualmente por enquanto. Mande uma mensagem curta contando quais vídeos você cortaria.</span>
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="mailto:contadelima@gmail.com?subject=ClipForge%20beta">contadelima@gmail.com</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 ClipForge · Rafael Cardoso Lima</span>
+    <span data-en>Independent project. Not affiliated with any video platform.</span>
+    <span data-pt>Projeto independente. Sem vínculo com nenhuma plataforma de vídeo.</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var btn=document.getElementById('lang'),root=document.documentElement;
+  function set(l){root.lang=l;btn.textContent=l==='pt-BR'?'EN':'PT';try{localStorage.setItem('cf-lang',l)}catch(e){}}
+  var saved=null;try{saved=localStorage.getItem('cf-lang')}catch(e){}
+  if(saved)set(saved);else if((navigator.language||'').toLowerCase().indexOf('pt')===0)set('pt-BR');
+  btn.addEventListener('click',function(){set(root.lang==='pt-BR'?'en':'pt-BR')});
+})();
+</script>
+</body>
+</html>
